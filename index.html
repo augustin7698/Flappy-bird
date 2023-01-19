@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="fr" >
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+	<title>Flappy Bird</title>
+     <script async defer src="https://buttons.github.io/buttons.js"></script>
+     <style type="text/css">
+body {
+     margin: 0;
+     overflow: hidden;
+}
+
+body > p {
+     width: 100%;
+     text-align: center;
+     font-family: arial;
+}
+
+body > canvas {
+     margin: 1vw 20vw;
+     width: 60vw;
+     border-radius: 13px;
+     
+}
+
+body > #github-button {
+     width: 40vw;
+     margin: 5vh 30vw;
+     justify-content: space-around;
+}
+
+/* mobile */
+@media screen and (max-width: 600px) {
+     body > canvas {
+          margin: 5vw;
+          width: 90vw;
+     }
+
+     body > p#command {
+          display: none;
+     }
+
+     body > #mobile-commmand > button {
+          width: 25vw;
+          height: 25vw;
+          cursor: pointer;
+          font-size: 10vw;
+          border: 0;
+          border-radius: 10px;
+          padding: 0;
+          margin: 0;
+     }
+}
+     </style>
+</head>
+<body onkeydown="controle(event.keyCode);" onclick="controle(32);">
+	<canvas id="flappy" width="1000" height="1000"></canvas>
+</body>
+<script type="text/javascript">
+
+function wait(ms) {
+     return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+
+canvas = document.getElementById('flappy');
+ctx = canvas.getContext('2d');
+ctx.fillStyle = 'black';
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+ctx.fillStyle = 'white';
+ctx.font = '30px Arial';
+ctx.fillText("press 'space' to start", 350, 250);
+game = 0;
+
+score = 0;
+document.getElementById('score').innerHTML = 'score: ' + score;
+
+function controle(x) {
+     if (x == 32) {
+          if (game == 0) {
+               game = 1;
+               setupt_game();
+          } else {
+               jump();
+          }
+     }
+}
+
+
+async function setupt_game() {
+     // effacer le canvas
+     ctx.fillStyle = 'black';
+     ctx.fillRect(0, 0, canvas.width, canvas.height);
+     // effacer le canvas
+     ctx.fillStyle = 'black';
+     ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+     // set up game
+     ObstacleWidth = 54 * 3/2;
+     ObstacleHeight = 283 * 3/2;
+     DoubleObstacleHeight = ObstacleHeight - 100;
+
+     // load images
+     bird = new Image();
+     bird.src = 'flappy.png';
+     obstacle = new Image();
+     obstacle.src = 'tuyeau.png';
+     obstacle2 = new Image();
+     obstacle2.src = 'tuyeau2.png';
+
+
+
+     // set up game
+     // set up player
+     player = {
+          x: 50,
+          y: 250,
+          width: 320/3,
+          height: 227/3,
+          color: 'white',
+          gravity: 0.2,
+          velocity: 0,
+          jump: 7,
+          score: 1,
+          draw: function() {
+               ctx.drawImage(bird, this.x, this.y, this.width, this.height);
+
+          },
+     }
+
+     // set up obstacles
+     obstacles = [];
+     obstacles.push({
+          x: canvas.width,
+          y: 0,
+          width: ObstacleWidth,
+          height: ObstacleHeight,
+          draw: function() {
+               ctx.drawImage(obstacle, this.x, this.y, this.width, this.height);
+          }
+     });
+     lastObstactle = 0; 
+
+     // game loop
+     while (game == 1) {
+          if (player.y + player.height >= canvas.height) {
+               game = 0;
+               ctx.fillStyle = 'white';
+               ctx.font = '30px Arial';
+               ctx.fillText('game over', 450, 250);
+               ctx.fillText('score: ' + Math.round(player.score), 450, 300);
+          }
+          // effacer le canvas
+          ctx.fillStyle = 'black';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+          // afficher le score
+          ctx.fillStyle = 'white';
+          ctx.font = '30px Arial';
+          ctx.fillText('score: ' + Math.round(player.score), 10, 30);
+
+          // afficher le joueur
+          player.draw();
+
+          // afficher les obstacles
+          for (i = 0; i < obstacles.length; i++) {
+               obstacles[i].draw();
+          }
+
+          // update le joueur
+          player.velocity += player.gravity;
+          player.y += player.velocity;
+          
+          // update les obstacles
+          for (i = 0; i < obstacles.length; i++) {
+               obstacles[i].x -= 3;
+          }
+
+          // ajouter un obstacle
+          if (obstacles[obstacles.length - 1].x < canvas.width - 400) {
+               if (Math.random() > 2/3 && lastObstactle != 0) {
+                    obstacles.push({
+                         x: canvas.width,
+                         y: 0,
+                         width: ObstacleWidth,
+                         height: ObstacleHeight,
+                         draw: function() {
+                              ctx.drawImage(obstacle, this.x, this.y, this.width, this.height);
+                         }
+                    });
+                    lastObstactle = 0;
+               } else if (Math.random() > 1/3 && lastObstactle != 1) {
+                    obstacles.push({
+                         x: canvas.width,
+                         y: canvas.height - ObstacleHeight,
+                         width: ObstacleWidth,
+                         height: ObstacleHeight,
+                         draw: function() {
+                              ctx.drawImage(obstacle2, this.x, this.y, this.width, this.height);
+                         }
+                    });
+                    lastObstactle = 1;
+               } else {
+                    obstacles.push({
+                         x: canvas.width,
+                         y: 0,
+                         width: ObstacleWidth,
+                         height: DoubleObstacleHeight,
+                         draw: function() {
+                              ctx.drawImage(obstacle, this.x, this.y, this.width, this.height);
+                         }
+                    });
+                    obstacles.push({
+                         x: canvas.width,
+                         y: canvas.height - DoubleObstacleHeight,
+                         width: ObstacleWidth,
+                         height: DoubleObstacleHeight,
+                         draw: function() {
+                              ctx.drawImage(obstacle2, this.x, this.y, this.width, this.height);
+                         }
+                    });
+                    lastObstactle = 2;
+               }
+          }
+
+          // supprimer les obstacles
+          if (obstacles[0].x < 0) {
+               obstacles.shift();
+          }
+
+          // collision
+          for (i = 0; i < obstacles.length; i++) {
+               if ((player.x < obstacles[i].x + obstacles[i].width &&
+                    player.x + player.width > obstacles[i].x &&
+                    player.y < obstacles[i].y + obstacles[i].height &&
+                    player.y + player.height > obstacles[i].y) || (player.y + player.height >= canvas.height) || (player.y <= 0)) {
+                    
+                    game = 0;
+                    ctx.fillStyle = 'white';
+                    ctx.font = '60px Arial';
+                    ctx.fillText('game over', 350, 250);
+                    ctx.fillText('score: ' + Math.round(player.score), 350, 300);
+               }
+          }
+          // score
+          player.score += 0.01;
+
+          // attendre 5ms avant de recommencer
+          await wait(5);
+
+
+
+     }
+     
+}
+
+async function jump() {
+     player.velocity = -player.jump;
+}
+
+</script>
+</html>
